@@ -41,7 +41,8 @@ int main(int argc, char** argv) {
     // After receiving the message, check the status to determine how many
     // numbers were actually received
     MPI_Get_count(&status, MPI_INT, &numbers_amount);
-    // Print off the amout if numbers, and also addictional...incomplete
+    // Print off the amout if numbers, and also additional information
+    // in the status object
     printf("1 received %d numbers from 0. Message source = %d, tag = %d\n", numbers_amount, status.MPI_SOURCE, status.MPI_TAG);
 
   }
@@ -50,3 +51,13 @@ int main(int argc, char** argv) {
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 }
+
+/*
+
+1º Faça um programa com a estrutura mestre /escravo, onde:
+
+    - mestre: gera uma quantidade aleatória entre 1000 e 2000 números de valores aleatórios entre 0 e 99, e envia para cada escravo.
+
+    - escravo: recebe os números, calcula a soma e envia para o mestre.
+    
+*/
