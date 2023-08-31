@@ -3,3 +3,6 @@ mpicc <file_name>.c -o <file_name>
 
 -- runner
 mpirun -np <num_processors> --hostfile hostfile  ./<file_name>
+
+-- using makefile
+make run file=<name_file>
