@@ -1,0 +1,5 @@
+-- compiler
+mpicc <file_name>.c -o <file_name>
+
+-- runner
+mpirun -np <num_processors> --hostfile hostfile  ./<file_name>
