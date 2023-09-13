@@ -84,13 +84,14 @@ int main(int argc, char** argv) {
 
     if (rank == MASTER_RANK) {
         int num_tasks = 0;
-        int total_tasks = 5; // Número total de tarefas a serem executadas
+        int total_tasks = 4; // Número total de tarefas a serem executadas
 
-        while (num_tasks < total_tasks) {
+        while (num_tasks < total_tasks) { // precisa mudar os parametros, num_task ta errado
             // Gera valores aleatórios e envia para os escravos com uma tag aleatória
             int num_values = rand() % 1001 + 1000; // Entre 1000 e 2000
-            int operation = rand() % total_tasks; // Operação aleatória (0 a 4)
-            operation = (operation == 4) ? 10 : operation;
+            int operation = rand() % total_tasks; // Operação aleatória (0 a 3)
+            printf("Operação agora é %d\n", operation);
+            // operation = (operation >= 4) ? 10 : operation;
             int values[num_values];
             for (int i = 0; i < num_values; i++) {
                 values[i] = generateRandomNumber();
