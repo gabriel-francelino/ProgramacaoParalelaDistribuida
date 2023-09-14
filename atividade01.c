@@ -80,20 +80,18 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    
-
     if (rank == MASTER_RANK)
     {
         srand(time(NULL));
-        int tag_task = 0; // TAG que vai definir a tarefa a ser feita
+        int tag_task = 0;                    // TAG que vai definir a tarefa a ser feita
         int total_task = (rand() % 51) + 50; // Gera uma quantidade de tarefas de 0 à 100
 
         // Enviando primeira rodada de tarefas
         for (int dest = 1; dest < world_size; dest++)
         {
             int numbers_amount = (rand() % 1001) + 1000; // Gerando números aleatórios entre 1000 e 2000
-            tag_task = (rand() % 4);               // Gerando task aleatória de 0 a 3
-            int numbers[numbers_amount];               // Vetor de números aleatórios
+            tag_task = (rand() % 4);                     // Gerando task aleatória de 0 a 3
+            int numbers[numbers_amount];                 // Vetor de números aleatórios
 
             for (int i = 0; i < numbers_amount; i++)
             {
@@ -105,19 +103,39 @@ int main(int argc, char **argv)
             MPI_Send(&tag_task, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
             total_task--;
         }
+
+        // Enviando o restante das tarefas
     }
     else
     {
-        // Recebendo primeira leva de tarefas
-        int recv_numbers_amount = 0; // Quantidade de némeros recebidas
-        int recv_tag_task = 0;       // Tag recebida associada a tarefa
-        MPI_Recv(&recv_numbers_amount, 1, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo a quantidade de números
-        int recv_numbers[recv_numbers_amount]; // Vetor de números recebidos
+        // Recebendo tarefas
+        int recv_numbers_amount = 0;                                                                             // Quantidade de némeros recebidas
+        int recv_tag_task = 0;                                                                                   // Tag recebida associada a tarefa
+        MPI_Recv(&recv_numbers_amount, 1, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);           // Recebendo a quantidade de números
+        int recv_numbers[recv_numbers_amount];                                                                   // Vetor de números recebidos
         MPI_Recv(recv_numbers, recv_numbers_amount, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo valores do vetor de números
-        MPI_Recv(&recv_tag_task, 1, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo valores do vetor de números
+        MPI_Recv(&recv_tag_task, 1, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);                 // Recebendo valores do vetor de números
 
-        printf("Quantidade de números: %d\n", recv_numbers_amount);
-        printf("Tag recebida é %d\n", recv_tag_task);
+        int result = 0;
+        switch (recv_tag_task)
+        {
+        case 0: // Soma
+            result = calculateSum(recv_numbers, recv_numbers_amount);
+            break;
+        case 1: // Média
+            result = calculateAverage(recv_numbers, recv_numbers_amount);
+            break;
+        case 2: // Maior valor
+            result = findMax(recv_numbers, recv_numbers_amount);
+            break;
+        case 3: // Mediana
+            result = calculateMedian(recv_numbers, recv_numbers_amount);
+            break;
+        default:
+            break;
+        }
+
+        printf("Resultado da operação %d: %d\n", recv_tag_task, result);
     }
 
     MPI_Finalize();
