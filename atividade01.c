@@ -5,7 +5,9 @@
 #include <unistd.h>
 
 #define MASTER_RANK 0
+#define TAG_TASK 0
 #define TASK_FINISH 10
+#define TAG_RESULT 1
 
 // Função para calcular a soma de um vetor de inteiros
 int calculateSum(int *arr, int size)
@@ -98,44 +100,58 @@ int main(int argc, char **argv)
                 numbers[i] = rand() % 100; // Gerando números de 0 a 99
             }
 
-            MPI_Send(&numbers_amount, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            MPI_Send(numbers, numbers_amount, MPI_INT, dest, 0, MPI_COMM_WORLD);
-            MPI_Send(&tag_task, 1, MPI_INT, dest, 0, MPI_COMM_WORLD);
+            MPI_Send(&numbers_amount, 1, MPI_INT, dest, TAG_TASK, MPI_COMM_WORLD);
+            MPI_Send(numbers, numbers_amount, MPI_INT, dest, TAG_TASK, MPI_COMM_WORLD);
+            MPI_Send(&tag_task, 1, MPI_INT, dest, TAG_TASK, MPI_COMM_WORLD);
             total_task--;
         }
 
         // Enviando o restante das tarefas
+        while (total_task)
+        {
+            int result = 0;
+            MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo a quantidade de números
+            printf("Resultado da operação: %d\n", result);
+        }
     }
     else
     {
         // Recebendo tarefas
-        int recv_numbers_amount = 0;                                                                             // Quantidade de némeros recebidas
-        int recv_tag_task = 0;                                                                                   // Tag recebida associada a tarefa
-        MPI_Recv(&recv_numbers_amount, 1, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);           // Recebendo a quantidade de números
-        int recv_numbers[recv_numbers_amount];                                                                   // Vetor de números recebidos
-        MPI_Recv(recv_numbers, recv_numbers_amount, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo valores do vetor de números
-        MPI_Recv(&recv_tag_task, 1, MPI_INT, MASTER_RANK, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);                 // Recebendo valores do vetor de números
+        int recv_tag_task = 0;
 
-        int result = 0;
-        switch (recv_tag_task)
+        while (recv_tag_task != 10)
         {
-        case 0: // Soma
-            result = calculateSum(recv_numbers, recv_numbers_amount);
-            break;
-        case 1: // Média
-            result = calculateAverage(recv_numbers, recv_numbers_amount);
-            break;
-        case 2: // Maior valor
-            result = findMax(recv_numbers, recv_numbers_amount);
-            break;
-        case 3: // Mediana
-            result = calculateMedian(recv_numbers, recv_numbers_amount);
-            break;
-        default:
-            break;
+
+            int recv_numbers_amount = 0;                                                                                    // Quantidade de némeros recebidas
+            MPI_Recv(&recv_numbers_amount, 1, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE);           // Recebendo a quantidade de números
+            int recv_numbers[recv_numbers_amount];                                                                          // Vetor de números recebidos
+            MPI_Recv(recv_numbers, recv_numbers_amount, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo valores do vetor de números
+            MPI_Recv(&recv_tag_task, 1, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE);                 // Recebendo valores do vetor de números
+
+            int result = 0;
+            switch (recv_tag_task)
+            {
+            case 0: // Soma
+                result = calculateSum(recv_numbers, recv_numbers_amount);
+                break;
+            case 1: // Média
+                result = calculateAverage(recv_numbers, recv_numbers_amount);
+                break;
+            case 2: // Maior valor
+                result = findMax(recv_numbers, recv_numbers_amount);
+                break;
+            case 3: // Mediana
+                result = calculateMedian(recv_numbers, recv_numbers_amount);
+                break;
+            default:
+                break;
+            }
+
+            MPI_Send(&result, 1, MPI_INT, MASTER_RANK, TAG_RESULT, MPI_COMM_WORLD);
+            
         }
 
-        printf("Resultado da operação %d: %d\n", recv_tag_task, result);
+        // Tag recebida associada a tarefa
     }
 
     MPI_Finalize();
