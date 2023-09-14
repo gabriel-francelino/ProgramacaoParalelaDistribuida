@@ -83,13 +83,14 @@ int main(int argc, char** argv) {
     srand(time(NULL) + rank);
 
     if (rank == MASTER_RANK) {
+        int operation = 0;
         int num_tasks = 0;
-        int total_tasks = 4; // Número total de tarefas a serem executadas
+        int total_tasks = 5; // Número total de tarefas a serem executadas
 
-        while (num_tasks < total_tasks) { // precisa mudar os parametros, num_task ta errado
+        while (operation < 4) { // precisa mudar os parametros, num_task ta errado
             // Gera valores aleatórios e envia para os escravos com uma tag aleatória
             int num_values = rand() % 1001 + 1000; // Entre 1000 e 2000
-            int operation = rand() % total_tasks; // Operação aleatória (0 a 3)
+            operation = rand() % total_tasks; // Operação aleatória (0 a 4)
             printf("Operação agora é %d\n", operation);
             // operation = (operation >= 4) ? 10 : operation;
             int values[num_values];
@@ -118,10 +119,12 @@ int main(int argc, char** argv) {
 
         // Envia mensagem de finalização para os escravos
         for (int i = 1; i < num_processes; i++) {
-            MPI_Send(NULL, 0, MPI_INT, i, TAG_FINISH, MPI_COMM_WORLD);
+            int stop = 10;
+            MPI_Send(&stop , 1, MPI_INT, i, TAG_FINISH, MPI_COMM_WORLD);
         }
     } else {
-        while (1) {
+        int operation = 0;
+        while (operation < 4) {
             int num_values, operation;
             MPI_Recv(&num_values, 1, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Recv(&operation, 1, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
