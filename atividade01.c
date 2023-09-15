@@ -21,10 +21,11 @@ int calculateSum(int *arr, int size)
 }
 
 // Função para calcular a média de um vetor de inteiros
-double calculateAverage(int *arr, int size)
+int calculateAverage(int *arr, int size)
 {
     int sum = calculateSum(arr, size);
-    return (double)sum / size;
+    int avg = sum / size;
+    return avg;
 }
 
 // Função para encontrar o maior valor em um vetor de inteiros
@@ -41,38 +42,28 @@ int findMax(int *arr, int size)
     return max;
 }
 
+// Função para comparar dois valores usando qsort
+int compare(const void *a, const void *b) {
+    return (*(int *)a - *(int *)b);
+}
+
 // Função para calcular a mediana de um vetor de inteiros
 int calculateMedian(int *arr, int size)
 {
-    int *sortedArr = malloc(sizeof(int) * size);
-    for (int i = 0; i < size; i++)
-    {
-        sortedArr[i] = arr[i];
-    }
     // Ordena o vetor
-    for (int i = 0; i < size - 1; i++)
-    {
-        for (int j = i + 1; j < size; j++)
-        {
-            if (sortedArr[i] > sortedArr[j])
-            {
-                int temp = sortedArr[i];
-                sortedArr[i] = sortedArr[j];
-                sortedArr[j] = temp;
-            }
-        }
+    qsort(arr, size, sizeof(int), compare);
+
+    // Se o tamanho do array for par, retorna a média dos dois elementos do meio
+    if (size % 2 == 0) {
+        int middle1 = arr[(size - 1) / 2];
+        int middle2 = arr[size / 2];
+        return (double)(middle1 + middle2) / 2.0;
     }
-    int median;
-    if (size % 2 == 0)
-    {
-        median = (sortedArr[size / 2 - 1] + sortedArr[size / 2]) / 2;
+    
+    // Se o tamanho for ímpar, retorne o elemento do meio
+    else {
+        return (double)arr[size / 2];
     }
-    else
-    {
-        median = sortedArr[size / 2];
-    }
-    free(sortedArr);
-    return median;
 }
 
 int main(int argc, char **argv)
@@ -160,7 +151,7 @@ int main(int argc, char **argv)
                 printf("Processo %d finalizado!\n", rank);
                 break;
             }
-            
+
             int recv_numbers[recv_numbers_amount];                                                                   // Vetor de números recebidos
             MPI_Recv(recv_numbers, recv_numbers_amount, MPI_INT, MASTER_RANK, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo valores do vetor de números
 
