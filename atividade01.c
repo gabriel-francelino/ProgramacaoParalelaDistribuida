@@ -71,22 +71,23 @@ int calculateMedian(int *arr, int size)
 
 int main(int argc, char **argv)
 {
-    int world_size, rank;
-    int initial_send = 1;
-    MPI_Status status;
-    MPI_Init(NULL, NULL);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    int world_size;                             // Quantidade de processos
+    int rank;                                   // rank dos processos
+    // int initial_send = 0;                       // Variável de controle para os primeiros envios
+    MPI_Status status;                          // Variável para obter os status dos envios
+    MPI_Init(NULL, NULL);                       // Inicializa o ambiente MPI.
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size); // Obtém o número total de processos em execução.
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);       // Obtém o rank (identificador) do processo atual.
 
     if (rank == MASTER_RANK)
     {
-        srand(time(NULL));
-        int tag_task = 0; // TAG que vai definir a tarefa a ser feita
-        // int total_task = (rand() % 51) + 50; // Gera uma quantidade de tarefas de 0 à 100
-        int total_task = 20; // Gera uma quantidade de tarefas de 0 à 100
-        int new_dest;
+        srand(time(NULL)); // // Inicializa a semente do gerador de números pseudoaleatórios com o tempo atual do sistema.
+        int tag_task = 0;  // TAG que vai definir a tarefa a ser feita
+        int total_task = (rand() % 91) + 10; // Gera uma quantidade de tarefas de 10 à 100
+        // int total_task = 20; // Quantidade de tarefas para teste
+        int new_dest;        // Recebe o rank da variável que termina a tarefa
 
-        // Enviando primeira rodada de tarefas
+        // Enviando primeira rodada de tarefas para todos os processos
         for (int dest = 1; dest < world_size; dest++)
         {
             int numbers_amount = (rand() % 1001) + 1000; // Gerando números aleatórios entre 1000 e 2000
@@ -98,10 +99,10 @@ int main(int argc, char **argv)
                 numbers[i] = rand() % 100; // Gerando números de 0 a 99
             }
 
-            MPI_Send(&numbers_amount, 1, MPI_INT, dest, tag_task, MPI_COMM_WORLD);
-            MPI_Send(numbers, numbers_amount, MPI_INT, dest, tag_task, MPI_COMM_WORLD);
+            MPI_Send(&numbers_amount, 1, MPI_INT, dest, tag_task, MPI_COMM_WORLD);      // Envia a quantidade de números
+            MPI_Send(numbers, numbers_amount, MPI_INT, dest, tag_task, MPI_COMM_WORLD); // Envia o vetor de números
             total_task--;
-            printf("Total tasks: %d\n", total_task);
+            // printf("Total tasks: %d\n", total_task);
         }
 
         // Enviando o restante das tarefas
@@ -110,20 +111,23 @@ int main(int argc, char **argv)
             // Recebendo  resultado do processo
             int result = 0; // Resultado da operação
 
-            if (initial_send)
-            {
-                for (int i = 1; i < world_size; i++)
-                {
-                    MPI_Recv(&result, 1, MPI_INT, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
-                    printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, i, result);
-                }
-                initial_send = 0;
-            }
-            else
-            {
-                MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
-                printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, status.MPI_SOURCE, result);
-            }
+            // if (initial_send) // Controle dos primeiros envios (não funcionou ainda)
+            // {
+            //     for (int i = 1; i < world_size-1; i++)
+            //     {
+            //         MPI_Recv(&result, 1, MPI_INT, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
+            //         printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, i, result);
+            //     }
+            //     initial_send = 0;
+            // }
+            // else
+            // {
+            //     MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
+            //     printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, status.MPI_SOURCE, result);
+            // }
+
+            MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
+            printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, status.MPI_SOURCE, result);
 
             // Enviando outra tarefa para o processo ocioso
             int numbers_amount = (rand() % 1001) + 1000; // Gerando números aleatórios entre 1000 e 2000
@@ -140,7 +144,7 @@ int main(int argc, char **argv)
             MPI_Send(&numbers_amount, 1, MPI_INT, new_dest, tag_task, MPI_COMM_WORLD);
             MPI_Send(numbers, numbers_amount, MPI_INT, new_dest, tag_task, MPI_COMM_WORLD);
             total_task--;
-            printf("Total tasks: %d\n", total_task);
+            // printf("Total tasks: %d\n", total_task);
         }
 
         // Enviando tag para processos finalizarem
@@ -190,9 +194,9 @@ int main(int argc, char **argv)
                 break;
             }
 
-            sleep(1); // Aguardando para enviar a resposta
-            MPI_Send(&result, 1, MPI_INT, MASTER_RANK, recv_tag_task, MPI_COMM_WORLD);
-            MPI_Send(&rank, 1, MPI_INT, MASTER_RANK, recv_tag_task, MPI_COMM_WORLD);
+            sleep(1);                                                                  // Aguardando para enviar a resposta
+            MPI_Send(&result, 1, MPI_INT, MASTER_RANK, recv_tag_task, MPI_COMM_WORLD); // Envia resultado da opaeração
+            // sleep(1);
         }
 
         // MPI_Bcast(&TASK_FINISH, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
