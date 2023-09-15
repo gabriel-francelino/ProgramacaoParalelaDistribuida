@@ -78,6 +78,7 @@ int calculateMedian(int *arr, int size)
 int main(int argc, char **argv)
 {
     int world_size, rank;
+    MPI_Status status;
     MPI_Init(NULL, NULL);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -109,9 +110,10 @@ int main(int argc, char **argv)
         // Enviando o restante das tarefas
         while (total_task)
         {
-            int result = 0;
-            MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo a quantidade de números
-            printf("Resultado da operação: %d\n", result);
+            int result = 0; // Resultado da operação 
+            int current_process = 0;
+            MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
+            printf("Resultado da operação %d: %d\n", status.MPI_SOURCE, result);
         }
     }
     else
@@ -147,7 +149,9 @@ int main(int argc, char **argv)
                 break;
             }
 
+            sleep(1); // Aguardando para enviar a resposta
             MPI_Send(&result, 1, MPI_INT, MASTER_RANK, TAG_RESULT, MPI_COMM_WORLD);
+            MPI_Send(&rank, 1, MPI_INT, MASTER_RANK, TAG_RESULT, MPI_COMM_WORLD);
             
         }
 
