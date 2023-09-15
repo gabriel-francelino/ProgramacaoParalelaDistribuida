@@ -86,9 +86,10 @@ int main(int argc, char **argv)
     if (rank == MASTER_RANK)
     {
         srand(time(NULL));
-        int tag_task = 0;                    // TAG que vai definir a tarefa a ser feita
+        int tag_task = 0; // TAG que vai definir a tarefa a ser feita
         // int total_task = (rand() % 51) + 50; // Gera uma quantidade de tarefas de 0 à 100
         int total_task = 20; // Gera uma quantidade de tarefas de 0 à 100
+        int new_dest;
 
         // Enviando primeira rodada de tarefas
         for (int dest = 1; dest < world_size; dest++)
@@ -106,44 +107,42 @@ int main(int argc, char **argv)
             MPI_Send(&numbers_amount, 1, MPI_INT, dest, TAG_TASK, MPI_COMM_WORLD);
             MPI_Send(numbers, numbers_amount, MPI_INT, dest, TAG_TASK, MPI_COMM_WORLD);
             total_task--;
+            printf("tTotal tasks: %d\n", total_task);
         }
 
         // Enviando o restante das tarefas
-        while (1)
+        while (total_task)
         {
-            int new_dest;
+            // Recebendo  resultado do processo
 
-            if (total_task)
+            int result = 0;                                                                     // Resultado da operação
+            MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
+            printf("Resultado da operação %d: %d\n", status.MPI_SOURCE, result);
+
+            // Enviando outra tarefa para o processo ocioso
+            int numbers_amount = (rand() % 1001) + 1000; // Gerando números aleatórios entre 1000 e 2000
+            tag_task = (rand() % 4);                     // Gerando task aleatória de 0 a 3
+            int numbers[numbers_amount];                 // Vetor de números aleatórios
+
+            for (int i = 0; i < numbers_amount; i++)
             {
-                // Recebendo  resultado do processo
-                int result = 0;                                                                     // Resultado da operação
-                MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
-                printf("Resultado da operação %d: %d\n", status.MPI_SOURCE, result);
-
-                // Enviando outra tarefa para o processo ocioso
-                int numbers_amount = (rand() % 1001) + 1000; // Gerando números aleatórios entre 1000 e 2000
-                tag_task = (rand() % 4);                     // Gerando task aleatória de 0 a 3
-                int numbers[numbers_amount];                 // Vetor de números aleatórios
-
-                for (int i = 0; i < numbers_amount; i++)
-                {
-                    numbers[i] = rand() % 100; // Gerando números de 0 a 99
-                }
-
-                new_dest = status.MPI_SOURCE;
-                MPI_Send(&tag_task, 1, MPI_INT, new_dest, TAG_TASK, MPI_COMM_WORLD);
-                MPI_Send(&numbers_amount, 1, MPI_INT, new_dest, TAG_TASK, MPI_COMM_WORLD);
-                MPI_Send(numbers, numbers_amount, MPI_INT, new_dest, TAG_TASK, MPI_COMM_WORLD);
-                total_task--;
+                numbers[i] = rand() % 100; // Gerando números de 0 a 99
             }
-            else
-            {
-                int finish = 10;
-                MPI_Send(&finish, 1, MPI_INT, new_dest, TASK_FINISH, MPI_COMM_WORLD);
-            }
+
+            new_dest = status.MPI_SOURCE;
+            MPI_Send(&tag_task, 1, MPI_INT, new_dest, TAG_TASK, MPI_COMM_WORLD);
+            MPI_Send(&numbers_amount, 1, MPI_INT, new_dest, TAG_TASK, MPI_COMM_WORLD);
+            MPI_Send(numbers, numbers_amount, MPI_INT, new_dest, TAG_TASK, MPI_COMM_WORLD);
+            total_task--;
+            printf("tTotal tasks: %d\n", total_task);
         }
 
-        // MPI_Bcast(&TASK_FINISH, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+        // Enviando tag para processos finalizarem
+        for (int i = 0; i < world_size; i++)
+        {
+            int finish = 10;
+            MPI_Send(&finish, 1, MPI_INT, i, TAG_TASK, MPI_COMM_WORLD);
+        }
     }
     else
     {
@@ -153,14 +152,15 @@ int main(int argc, char **argv)
         while (1)
         {
 
-            int recv_numbers_amount = 0;                                                                                    // Quantidade de némeros recebidas
-            MPI_Recv(&recv_tag_task, 1, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE);                 // Recebendo valores do vetor de números
-            
+            int recv_numbers_amount = 0;                                                                    // Quantidade de némeros recebidas
+            MPI_Recv(&recv_tag_task, 1, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo valores do vetor de números
+
             if (recv_tag_task == 10)
             {
+                printf("Processo %d finalizado!\n", rank);
                 break;
             }
-            
+
             MPI_Recv(&recv_numbers_amount, 1, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE);           // Recebendo a quantidade de números
             int recv_numbers[recv_numbers_amount];                                                                          // Vetor de números recebidos
             MPI_Recv(recv_numbers, recv_numbers_amount, MPI_INT, MASTER_RANK, TAG_TASK, MPI_COMM_WORLD, MPI_STATUS_IGNORE); // Recebendo valores do vetor de números
