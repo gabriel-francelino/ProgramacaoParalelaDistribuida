@@ -43,7 +43,8 @@ int findMax(int *arr, int size)
 }
 
 // Função para comparar dois valores usando qsort
-int compare(const void *a, const void *b) {
+int compare(const void *a, const void *b)
+{
     return (*(int *)a - *(int *)b);
 }
 
@@ -54,14 +55,16 @@ int calculateMedian(int *arr, int size)
     qsort(arr, size, sizeof(int), compare);
 
     // Se o tamanho do array for par, retorna a média dos dois elementos do meio
-    if (size % 2 == 0) {
+    if (size % 2 == 0)
+    {
         int middle1 = arr[(size - 1) / 2];
         int middle2 = arr[size / 2];
         return (double)(middle1 + middle2) / 2.0;
     }
-    
+
     // Se o tamanho for ímpar, retorne o elemento do meio
-    else {
+    else
+    {
         return (double)arr[size / 2];
     }
 }
@@ -69,7 +72,7 @@ int calculateMedian(int *arr, int size)
 int main(int argc, char **argv)
 {
     int world_size, rank;
-    int send_permission = 1;
+    int initial_send = 1;
     MPI_Status status;
     MPI_Init(NULL, NULL);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
@@ -98,16 +101,29 @@ int main(int argc, char **argv)
             MPI_Send(&numbers_amount, 1, MPI_INT, dest, tag_task, MPI_COMM_WORLD);
             MPI_Send(numbers, numbers_amount, MPI_INT, dest, tag_task, MPI_COMM_WORLD);
             total_task--;
-            printf("tTotal tasks: %d\n", total_task);
+            printf("Total tasks: %d\n", total_task);
         }
 
         // Enviando o restante das tarefas
         while (total_task)
         {
             // Recebendo  resultado do processo
-            int result = 0;                                                                      // Resultado da operação
-            MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
-            printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, status.MPI_SOURCE, result);
+            int result = 0; // Resultado da operação
+
+            if (initial_send)
+            {
+                for (int i = 1; i < world_size; i++)
+                {
+                    MPI_Recv(&result, 1, MPI_INT, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
+                    printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, i, result);
+                }
+                initial_send = 0;
+            }
+            else
+            {
+                MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
+                printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, status.MPI_SOURCE, result);
+            }
 
             // Enviando outra tarefa para o processo ocioso
             int numbers_amount = (rand() % 1001) + 1000; // Gerando números aleatórios entre 1000 e 2000
@@ -120,7 +136,7 @@ int main(int argc, char **argv)
                 numbers[i] = rand() % 100;
             }
 
-            new_dest = status.MPI_SOURCE;
+            new_dest = status.MPI_SOURCE; // Recebe o rank do processo que enviou a tarefa
             MPI_Send(&numbers_amount, 1, MPI_INT, new_dest, tag_task, MPI_COMM_WORLD);
             MPI_Send(numbers, numbers_amount, MPI_INT, new_dest, tag_task, MPI_COMM_WORLD);
             total_task--;
@@ -143,8 +159,8 @@ int main(int argc, char **argv)
         {
 
             int recv_numbers_amount = 0;
-            MPI_Recv(&recv_numbers_amount, 1, MPI_INT, MASTER_RANK, MPI_ANY_TAG, MPI_COMM_WORLD, &status);           // Recebendo a quantidade de números
-            
+            MPI_Recv(&recv_numbers_amount, 1, MPI_INT, MASTER_RANK, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
+
             recv_tag_task = status.MPI_TAG;
             if (recv_tag_task == 10)
             {
@@ -154,7 +170,6 @@ int main(int argc, char **argv)
 
             int recv_numbers[recv_numbers_amount];                                                                   // Vetor de números recebidos
             MPI_Recv(recv_numbers, recv_numbers_amount, MPI_INT, MASTER_RANK, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo valores do vetor de números
-
 
             int result = 0;
             switch (recv_tag_task)
