@@ -114,7 +114,6 @@ int main(int argc, char **argv)
         while (total_task)
         {
             // Recebendo  resultado do processo
-
             int result = 0;                                                                     // Resultado da operação
             MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
             printf("Resultado da operação %d: %d\n", status.MPI_SOURCE, result);
@@ -124,9 +123,10 @@ int main(int argc, char **argv)
             tag_task = (rand() % 4);                     // Gerando task aleatória de 0 a 3
             int numbers[numbers_amount];                 // Vetor de números aleatórios
 
+            // Preenchendo vetor com valores aleatórios entre 0 à 99
             for (int i = 0; i < numbers_amount; i++)
             {
-                numbers[i] = rand() % 100; // Gerando números de 0 a 99
+                numbers[i] = rand() % 100;
             }
 
             new_dest = status.MPI_SOURCE;
