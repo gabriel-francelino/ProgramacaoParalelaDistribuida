@@ -73,7 +73,6 @@ int main(int argc, char **argv)
 {
     int world_size;                             // Quantidade de processos
     int rank;                                   // rank dos processos
-    // int initial_send = 0;                       // Variável de controle para os primeiros envios
     MPI_Status status;                          // Variável para obter os status dos envios
     MPI_Init(NULL, NULL);                       // Inicializa o ambiente MPI.
     MPI_Comm_size(MPI_COMM_WORLD, &world_size); // Obtém o número total de processos em execução.
@@ -110,21 +109,6 @@ int main(int argc, char **argv)
         {
             // Recebendo  resultado do processo
             int result = 0; // Resultado da operação
-
-            // if (initial_send) // Controle dos primeiros envios (não funcionou ainda)
-            // {
-            //     for (int i = 1; i < world_size-1; i++)
-            //     {
-            //         MPI_Recv(&result, 1, MPI_INT, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
-            //         printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, i, result);
-            //     }
-            //     initial_send = 0;
-            // }
-            // else
-            // {
-            //     MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
-            //     printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, status.MPI_SOURCE, result);
-            // }
 
             MPI_Recv(&result, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // Recebendo a quantidade de números
             printf("Operação: %d, Processo: %d, Resultado: %d\n", status.MPI_TAG, status.MPI_SOURCE, result);
