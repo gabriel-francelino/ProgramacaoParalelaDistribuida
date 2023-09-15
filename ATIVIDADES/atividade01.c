@@ -82,8 +82,8 @@ int main(int argc, char **argv)
     {
         srand(time(NULL)); // // Inicializa a semente do gerador de números pseudoaleatórios com o tempo atual do sistema.
         int tag_task = 0;  // TAG que vai definir a tarefa a ser feita
-        int total_task = (rand() % 91) + 10; // Gera uma quantidade de tarefas de 10 à 100
-        // int total_task = 20; // Quantidade de tarefas para teste
+        // int total_task = (rand() % 91) + 10; // Gera uma quantidade de tarefas de 10 à 100
+        int total_task = 25; // Quantidade de tarefas para teste
         int new_dest;        // Recebe o rank da variável que termina a tarefa
 
         // Enviando primeira rodada de tarefas para todos os processos
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
             MPI_Send(&numbers_amount, 1, MPI_INT, dest, tag_task, MPI_COMM_WORLD);      // Envia a quantidade de números
             MPI_Send(numbers, numbers_amount, MPI_INT, dest, tag_task, MPI_COMM_WORLD); // Envia o vetor de números
             total_task--;
-            // printf("Total tasks: %d\n", total_task);
+            printf("Total tasks: %d\n", total_task);
         }
 
         // Enviando o restante das tarefas
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
             MPI_Send(&numbers_amount, 1, MPI_INT, new_dest, tag_task, MPI_COMM_WORLD);
             MPI_Send(numbers, numbers_amount, MPI_INT, new_dest, tag_task, MPI_COMM_WORLD);
             total_task--;
-            // printf("Total tasks: %d\n", total_task);
+            printf("Total tasks: %d\n", total_task);
         }
 
         // Enviando tag para processos finalizarem
