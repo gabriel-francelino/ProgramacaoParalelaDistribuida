@@ -13,6 +13,8 @@
 #include <time.h>
 #include <assert.h>
 
+#define MASTER_RANK 0
+
 int matrixMultiplication() { return 0; }
 
 /**
@@ -44,8 +46,6 @@ int **create_matrix(int lines, int columns)
         *ptr = rand() % 10;
         ptr++;
     }
-
-    
 
     return matrix;
 }
@@ -92,13 +92,21 @@ int main(int argc, char const *argv[])
     // Cria um array de números aleatórios no processo raiz (rank 0)
     int **matrix1 = NULL;
     int **matrix2 = NULL;
-    if (world_rank == 0)
+    if (world_rank == MASTER_RANK)
     {
         matrix1 = create_matrix(world_size, n_columns_matrix1);
         matrix2 = create_matrix(n_lines_matrix2, world_size);
-        // printMatrix(matrix1, (world_size*n_columns_matrix1));
-        // printMatrix(matrix2, (n_lines_matrix2*world_size));
+        printMatrix(matrix1, (world_size*n_columns_matrix1));
+        printMatrix(matrix2, (n_lines_matrix2*world_size));
     }
+
+    // Desalocando memória
+    if (world_rank == MASTER_RANK)
+    {
+        free(matrix1);
+        free(matrix2);
+    }
+    
 
     // Sincronização para garantir que todos os processos cheguem a este ponto
     MPI_Barrier(MPI_COMM_WORLD);
