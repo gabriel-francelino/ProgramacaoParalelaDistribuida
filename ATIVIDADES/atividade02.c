@@ -40,23 +40,23 @@ int parallelMatrixMultiplication(int *vet1, int *vet2, int size1, int size2)
  *
  * @return Uma matrix alocada dinamicamente
  */
-int **create_matrix(int lines, int columns)
+int **create_matrix(int size)
 {
     // Alocando linhas da matriz
-    int **matrix = (int **)malloc(sizeof(int *) * lines);
+    int **matrix = (int **)malloc(sizeof(int *) * size);
     assert(matrix != NULL);
 
     // Alocando colunas da matriz
-    for (int i = 0; i < lines; i++)
+    for (int i = 0; i < size; i++)
     {
-        matrix[i] = (int *)malloc(sizeof(int) * columns);
+        matrix[i] = (int *)malloc(sizeof(int) * size);
         assert(matrix[i] != NULL);
     }
 
     // Criando ponteiro para percorrer a matriz
     int *ptr = *matrix;
     // Inicializando a matriz com valores de 0 a 9
-    for (int i = 0; i < (lines * columns); i++)
+    for (int i = 0; i < (size*size); i++)
     {
         *ptr = rand() % 10;
         ptr++;
@@ -100,15 +100,15 @@ void freeMatrix(int **matrix, int n_lines)
 int main(int argc, char const *argv[])
 {
     // Verifica se o programa foi chamado com o número correto de argumentos
-    if (argc != 3)
+    if (argc != 2)
     {
-        fprintf(stderr, "Usage: ./atividade02 <colunas_matriz1> <linhas_matrz2>\n");
+        fprintf(stderr, "Usage: ./atividade02 <dimensao_matriz>\n");
         exit(1);
     }
 
     // Lê o número de elementos por processo da linha de comando
-    int n_columns_matrix1 = atoi(argv[1]);
-    int n_lines_matrix2 = atoi(argv[2]);
+    int size = atoi(argv[1]);
+    int size_matrix = size * size;
 
     // Inicializa o gerador de números aleatórios com uma semente baseada no tempo
     srand(time(NULL));
@@ -125,29 +125,29 @@ int main(int argc, char const *argv[])
     int **matrix2 = NULL;
     if (world_rank == MASTER_RANK)
     {
-        matrix1 = create_matrix(world_size, n_columns_matrix1);
-        matrix2 = create_matrix(n_lines_matrix2, world_size);
-        // printMatrix(matrix1, (world_size * n_columns_matrix1));
-        // printMatrix(matrix2, (n_lines_matrix2 * world_size));
+        matrix1 = create_matrix(size);
+        matrix2 = create_matrix(size);
+        printMatrix(matrix1, (size_matrix));
+        printMatrix(matrix2, (size_matrix));
     }
 
     // Cada processo cria um buffer para armazenar os subconjuntos dos números aleatórios
-    int *vet_matrix1_line = (int *)malloc(sizeof(int) * n_columns_matrix1);
-    int *vet_matrix2_column = (int *)malloc(sizeof(int) * n_lines_matrix2);
+    int *vet_matrix1_line = (int *)malloc(sizeof(int) * size);
+    int *vet_matrix2_column = (int *)malloc(sizeof(int) * size);
 
     // Distribui cada linha da matriz1 do processo raiz para todos os processos
-    MPI_Scatter(matrix1, n_columns_matrix1, MPI_INT, vet_matrix1_line, n_columns_matrix1,
+    MPI_Scatter(matrix1, size, MPI_INT, vet_matrix1_line, size,
                 MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
 
     // Distribui cada coluna da matriz2 do processo raiz para todos os processos
-    MPI_Scatter(matrix2, n_lines_matrix2, MPI_INT, vet_matrix2_column, n_lines_matrix2,
+    MPI_Scatter(matrix2, size, MPI_INT, vet_matrix2_column, size,
                 MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
 
     // Desalocando memória
     if (world_rank == MASTER_RANK)
     {
-        freeMatrix(matrix1, world_size);
-        freeMatrix(matrix2, n_lines_matrix2);
+        freeMatrix(matrix1, size);
+        freeMatrix(matrix2, size);
     }
     free(vet_matrix1_line);
     free(vet_matrix2_column);
