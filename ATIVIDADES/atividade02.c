@@ -67,6 +67,21 @@ void printMatrix(int **matrix, int size)
     }
 }
 
+/**
+ * Desaloca memória da matriz
+ * 
+ * @param matrix Matriz a ser liberada da memória
+ * @param n_lines Número de linhas da matriz
+*/
+void freeMatrix(int **matrix, int n_lines)
+{
+    for (int i = 0; i < n_lines; i++)
+    {
+        free(matrix[i]);
+    }
+    free(matrix);
+}
+
 int main(int argc, char const *argv[])
 {
     // Verifica se o programa foi chamado com o número correto de argumentos
@@ -116,8 +131,8 @@ int main(int argc, char const *argv[])
     // Desalocando memória
     if (world_rank == MASTER_RANK)
     {
-        free(matrix1);
-        free(matrix2);
+        freeMatrix(matrix1, world_size);
+        freeMatrix(matrix2, n_lines_matrix2);
     }
     free(vet_matrix1_line);
     free(vet_matrix2_column);
