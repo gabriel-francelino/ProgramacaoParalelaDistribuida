@@ -15,7 +15,22 @@
 
 #define MASTER_RANK 0
 
-int matrixMultiplication() { return 0; }
+int parallelMatrixMultiplication(int *vet1, int *vet2, int size1, int size2)
+{
+    int result[size2];
+
+    for (int i = 0; i < size1; i++)
+    {
+        for (int i = 0; i < size2; i++)
+        {
+            
+        }
+        
+    }
+    
+
+    return 0;
+}
 
 /**
  * Cria uma matriz de números aleatórios. Cada número está no intervalo de 0 a 9.
@@ -69,10 +84,10 @@ void printMatrix(int **matrix, int size)
 
 /**
  * Desaloca memória da matriz
- * 
+ *
  * @param matrix Matriz a ser liberada da memória
  * @param n_lines Número de linhas da matriz
-*/
+ */
 void freeMatrix(int **matrix, int n_lines)
 {
     for (int i = 0; i < n_lines; i++)
