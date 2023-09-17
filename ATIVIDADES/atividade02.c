@@ -4,7 +4,7 @@
  * gerar matriz e imprimir no processo raiz
  *
  * o numero de linhas(m) da primeira matriz deve ser igual ao numero de colunas (n) da segunda matriz
- * 
+ *
  * m = n = número de processos
  */
 #include <stdio.h>
@@ -19,12 +19,12 @@ int matrixMultiplication() { return 0; }
 
 /**
  * Cria uma matriz de números aleatórios. Cada número está no intervalo de 0 a 9.
- * 
+ *
  * @param lines número de linhas
  * @param columns número de colunas
- * 
+ *
  * @return Uma matrix alocada dinamicamente
-*/
+ */
 int **create_matrix(int lines, int columns)
 {
     // Alocando linhas da matriz
@@ -52,11 +52,12 @@ int **create_matrix(int lines, int columns)
 
 /**
  * Imprime os valores da matriz no terminal
- * 
+ *
  * @param matrix Matriz que deseja imprimir
  * @param size Tamanho da matriz
-*/
-void printMatrix(int **matrix, int size){
+ */
+void printMatrix(int **matrix, int size)
+{
     int *ptr = *matrix;
 
     for (int i = 0; i < size; i++)
@@ -89,16 +90,28 @@ int main(int argc, char const *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    // Cria um array de números aleatórios no processo raiz (rank 0)
+    // Cria as matrizers de números aleatórios no processo raiz (rank 0)
     int **matrix1 = NULL;
     int **matrix2 = NULL;
     if (world_rank == MASTER_RANK)
     {
         matrix1 = create_matrix(world_size, n_columns_matrix1);
         matrix2 = create_matrix(n_lines_matrix2, world_size);
-        printMatrix(matrix1, (world_size*n_columns_matrix1));
-        printMatrix(matrix2, (n_lines_matrix2*world_size));
+        // printMatrix(matrix1, (world_size * n_columns_matrix1));
+        // printMatrix(matrix2, (n_lines_matrix2 * world_size));
     }
+
+    // Cada processo cria um buffer para armazenar os subconjuntos dos números aleatórios
+    int *vet_matrix1_line = (int *)malloc(sizeof(int) * n_columns_matrix1);
+    int *vet_matrix2_column = (int *)malloc(sizeof(int) * n_lines_matrix2);
+
+    // Distribui cada linha da matriz1 do processo raiz para todos os processos
+    MPI_Scatter(matrix1, n_columns_matrix1, MPI_INT, vet_matrix1_line, n_columns_matrix1,
+                MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+
+    // Distribui cada coluna da matriz2 do processo raiz para todos os processos
+    MPI_Scatter(matrix2, n_lines_matrix2, MPI_INT, vet_matrix2_column, n_lines_matrix2,
+                MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
 
     // Desalocando memória
     if (world_rank == MASTER_RANK)
@@ -106,7 +119,8 @@ int main(int argc, char const *argv[])
         free(matrix1);
         free(matrix2);
     }
-    
+    free(vet_matrix1_line);
+    free(vet_matrix2_column);
 
     // Sincronização para garantir que todos os processos cheguem a este ponto
     MPI_Barrier(MPI_COMM_WORLD);
