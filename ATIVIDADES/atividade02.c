@@ -3,7 +3,9 @@
  *
  * gerar matriz e imprimir no processo raiz
  *
- *
+ * o numero de linhas(m) da primeira matriz deve ser igual ao numero de colunas (n) da segunda matriz
+ * 
+ * m = n = número de processos
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,13 +71,13 @@ int main(int argc, char const *argv[])
     // Verifica se o programa foi chamado com o número correto de argumentos
     if (argc != 3)
     {
-        fprintf(stderr, "Usage: ./avg num_elements_per_proc\n");
+        fprintf(stderr, "Usage: ./atividade02 <colunas_matriz1> <linhas_matrz2>\n");
         exit(1);
     }
 
     // Lê o número de elementos por processo da linha de comando
-    int n_lines = atoi(argv[1]);
-    int n_columns = atoi(argv[2]);
+    int n_columns_matrix1 = atoi(argv[1]);
+    int n_lines_matrix2 = atoi(argv[2]);
 
     // Inicializa o gerador de números aleatórios com uma semente baseada no tempo
     srand(time(NULL));
@@ -88,11 +90,14 @@ int main(int argc, char const *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     // Cria um array de números aleatórios no processo raiz (rank 0)
-    int **matrix = NULL;
+    int **matrix1 = NULL;
+    int **matrix2 = NULL;
     if (world_rank == 0)
     {
-        matrix = create_matrix(n_lines, n_columns);
-        printMatrix(matrix, (n_lines*n_columns));
+        matrix1 = create_matrix(world_size, n_columns_matrix1);
+        matrix2 = create_matrix(n_lines_matrix2, world_size);
+        // printMatrix(matrix1, (world_size*n_columns_matrix1));
+        // printMatrix(matrix2, (n_lines_matrix2*world_size));
     }
 
     // Sincronização para garantir que todos os processos cheguem a este ponto
