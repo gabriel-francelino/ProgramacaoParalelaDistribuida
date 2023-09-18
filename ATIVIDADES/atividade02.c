@@ -77,8 +77,10 @@ void generateMatrix(int *matrix, int size)
 // Função para calcular a matriz transposta
 void transposedMatrix(int *matrix, int size, int *result)
 {
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
             // Acesso aos elementos da matriz usando ponteiros
             result[j * size + i] = matrix[i * size + j];
         }
@@ -94,7 +96,7 @@ void transposedMatrix(int *matrix, int size, int *result)
 void printMatrix(int *matrix, int size)
 {
     int count = 0;
-    for (int i = 0; i < (size*size); i++)
+    for (int i = 0; i < (size * size); i++)
     {
         printf("[");
         printf(" %d ", *matrix);
@@ -106,7 +108,6 @@ void printMatrix(int *matrix, int size)
             printf("\n");
             count = 0;
         }
-        
     }
     printf("\n");
 }
@@ -153,28 +154,53 @@ int main(int argc, char const *argv[])
     int matrix1[size][size];
     int matrix2[size][size];
     int matrix2_t[size][size];
+    int line_id[size];
     if (world_rank == MASTER_RANK)
     {
         generateMatrix(&matrix1[0][0], size_matrix);
         generateMatrix(&matrix2[0][0], size_matrix);
         transposedMatrix(&matrix2[0][0], size, &matrix2_t[0][0]);
 
+        
+
+        for (int i = 0; i < size; i++)
+        {
+            line_id[i] = i;
+        }
+
         // printMatrix(&matrix1[0][0], size);
         // printMatrix(&matrix2[0][0], size);
         // printMatrix(&matrix2_t[0][0], size);
-
     }
 
     // Cada processo cria um buffer para armazenar os subconjuntos dos números aleatórios
     int vet_matrix1_line[size];
-    int vet_matrix2_column[size];
+
+    // int vet_matrix2_column[size];
 
     // Distribui cada linha da matriz1 do processo raiz para todos os processos
-    MPI_Scatter(matrix1, size, MPI_INT, vet_matrix1_line, size,
+    // MPI_Scatter(matrix1, size, MPI_INT, vet_matrix1_line, size,
+    //             MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    int line = 0;
+    MPI_Scatter(line_id, 1, MPI_INT, &line, 1,
                 MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    printf("rank: %d, line: %d\n", world_rank, line);
 
     // // Distribui cada coluna da matriz2 do processo raiz para todos os processos
-    MPI_Bcast(matrix2_t, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    MPI_Bcast(matrix1, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    MPI_Bcast(matrix2, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+
+    int result[size];
+    for (int i = 0; i < size; i++)
+    {
+        result[i] = 0;
+        for (int j = 0; j < size; j++)
+        {
+            result[i] += matrix1[line][j] * matrix2[j][line];
+            printf(" [%d] ", result[i]);
+        }
+        printf("\n");
+    }
 
     // Desalocando memória
     // if (world_rank == MASTER_RANK)
