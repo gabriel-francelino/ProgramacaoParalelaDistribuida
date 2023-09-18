@@ -23,11 +23,8 @@ int parallelMatrixMultiplication(int *vet1, int *vet2, int size1, int size2)
     {
         for (int i = 0; i < size2; i++)
         {
-            
         }
-        
     }
-    
 
     return 0;
 }
@@ -56,13 +53,25 @@ int **create_matrix(int size)
     // Criando ponteiro para percorrer a matriz
     int *ptr = *matrix;
     // Inicializando a matriz com valores de 0 a 9
-    for (int i = 0; i < (size*size); i++)
+    for (int i = 0; i < (size * size); i++)
     {
         *ptr = rand() % 10;
         ptr++;
     }
 
     return matrix;
+}
+
+// Função para calcular a matriz transposta
+void transposedMatrix(int **t_matrix, int **matriz, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            t_matrix[i][j] = matriz[j][i];
+        }
+    }
 }
 
 /**
@@ -80,6 +89,7 @@ void printMatrix(int **matrix, int size)
         printf("p[%d]= %d\n", i, *ptr);
         ptr++;
     }
+    printf("\n");
 }
 
 /**
@@ -123,12 +133,17 @@ int main(int argc, char const *argv[])
     // Cria as matrizers de números aleatórios no processo raiz (rank 0)
     int **matrix1 = NULL;
     int **matrix2 = NULL;
+    int **t_matrix2 = NULL;
     if (world_rank == MASTER_RANK)
     {
         matrix1 = create_matrix(size);
         matrix2 = create_matrix(size);
+        t_matrix2 = create_matrix(size);
+        transposedMatrix(t_matrix2, matrix2, size);
+
         printMatrix(matrix1, (size_matrix));
         printMatrix(matrix2, (size_matrix));
+        printMatrix(t_matrix2, (size_matrix));
     }
 
     // Cada processo cria um buffer para armazenar os subconjuntos dos números aleatórios
@@ -148,6 +163,7 @@ int main(int argc, char const *argv[])
     {
         freeMatrix(matrix1, size);
         freeMatrix(matrix2, size);
+        freeMatrix(t_matrix2, size);
     }
     free(vet_matrix1_line);
     free(vet_matrix2_column);
