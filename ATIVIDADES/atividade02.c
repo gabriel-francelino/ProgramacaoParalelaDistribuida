@@ -15,19 +15,22 @@
 
 #define MASTER_RANK 0
 
-int parallelMatrixMultiplication(int *vet1, int *vet2, int size1, int size2)
-{
-    int result[size2];
+// int *parallelMatrixMultiplication(int *vet1, int *matrix, int size)
+// {
+//     int result[size];
 
-    for (int i = 0; i < size1; i++)
-    {
-        for (int i = 0; i < size2; i++)
-        {
-        }
-    }
+//     for (int i = 0; i < size; i++)
+//     {
+//         int aux = 0;
+//         for (int j = 0; j < size; j++)
+//         {
+//             aux += vet1[j] * matrix[j];
+//         }
+//         result[i] = aux;
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
 /**
  * Cria uma matriz de números aleatórios. Cada número está no intervalo de 0 a 9.
@@ -62,14 +65,22 @@ int **create_matrix(int size)
     return matrix;
 }
 
-// Função para calcular a matriz transposta
-void transposedMatrix(int **t_matrix, int **matriz, int size)
+void generateMatrix(int *matrix, int size)
 {
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++)
-        {
-            t_matrix[i][j] = matriz[j][i];
+        *matrix = rand() % 10;
+        matrix++;
+    }
+}
+
+// Função para calcular a matriz transposta
+void transposedMatrix(int *matrix, int size, int *result)
+{
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            // Acesso aos elementos da matriz usando ponteiros
+            result[j * size + i] = matrix[i * size + j];
         }
     }
 }
@@ -80,14 +91,22 @@ void transposedMatrix(int **t_matrix, int **matriz, int size)
  * @param matrix Matriz que deseja imprimir
  * @param size Tamanho da matriz
  */
-void printMatrix(int **matrix, int size)
+void printMatrix(int *matrix, int size)
 {
-    int *ptr = *matrix;
-
-    for (int i = 0; i < size; i++)
+    int count = 0;
+    for (int i = 0; i < (size*size); i++)
     {
-        printf("p[%d]= %d\n", i, *ptr);
-        ptr++;
+        printf("[");
+        printf(" %d ", *matrix);
+        printf("]");
+        count++;
+        matrix++;
+        if (count >= size)
+        {
+            printf("\n");
+            count = 0;
+        }
+        
     }
     printf("\n");
 }
@@ -131,42 +150,41 @@ int main(int argc, char const *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     // Cria as matrizers de números aleatórios no processo raiz (rank 0)
-    int **matrix1 = NULL;
-    int **matrix2 = NULL;
-    int **t_matrix2 = NULL;
+    int matrix1[size][size];
+    int matrix2[size][size];
+    int matrix2_t[size][size];
     if (world_rank == MASTER_RANK)
     {
-        matrix1 = create_matrix(size);
-        matrix2 = create_matrix(size);
-        t_matrix2 = create_matrix(size);
-        transposedMatrix(t_matrix2, matrix2, size);
+        generateMatrix(&matrix1[0][0], size_matrix);
+        generateMatrix(&matrix2[0][0], size_matrix);
+        transposedMatrix(&matrix2[0][0], size, &matrix2_t[0][0]);
 
-        printMatrix(matrix1, (size_matrix));
-        printMatrix(matrix2, (size_matrix));
-        printMatrix(t_matrix2, (size_matrix));
+        // printMatrix(&matrix1[0][0], size);
+        // printMatrix(&matrix2[0][0], size);
+        // printMatrix(&matrix2_t[0][0], size);
+
     }
 
     // Cada processo cria um buffer para armazenar os subconjuntos dos números aleatórios
-    int *vet_matrix1_line = (int *)malloc(sizeof(int) * size);
-    int *vet_matrix2_column = (int *)malloc(sizeof(int) * size);
+    int vet_matrix1_line[size];
+    int vet_matrix2_column[size];
 
     // Distribui cada linha da matriz1 do processo raiz para todos os processos
     MPI_Scatter(matrix1, size, MPI_INT, vet_matrix1_line, size,
                 MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
 
-    // Distribui cada coluna da matriz2 do processo raiz para todos os processos
-    MPI_Scatter(matrix2, size, MPI_INT, vet_matrix2_column, size,
-                MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    // // Distribui cada coluna da matriz2 do processo raiz para todos os processos
+    MPI_Bcast(matrix2_t, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
 
     // Desalocando memória
-    if (world_rank == MASTER_RANK)
-    {
-        freeMatrix(matrix1, size);
-        freeMatrix(matrix2, size);
-        freeMatrix(t_matrix2, size);
-    }
-    free(vet_matrix1_line);
-    free(vet_matrix2_column);
+    // if (world_rank == MASTER_RANK)
+    // {
+    //     freeMatrix(matrix1, size);
+    //     freeMatrix(matrix2, size);
+    //     freeMatrix(t_matrix2, size);
+    // }
+    // free(vet_matrix1_line);
+    // free(vet_matrix2_column);
 
     // Sincronização para garantir que todos os processos cheguem a este ponto
     MPI_Barrier(MPI_COMM_WORLD);
