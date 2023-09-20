@@ -154,7 +154,7 @@ int main(int argc, char const *argv[])
     int matrix1[size][size];
     int matrix2[size][size];
     int matrix2_t[size][size];
-    int line_id[size];
+    // int line_id[size];
     if (world_rank == MASTER_RANK)
     {
         generateMatrix(&matrix1[0][0], size_matrix);
@@ -163,10 +163,10 @@ int main(int argc, char const *argv[])
 
         
 
-        for (int i = 0; i < size; i++)
-        {
-            line_id[i] = i;
-        }
+        // for (int i = 0; i < size; i++)
+        // {
+        //     line_id[i] = i;
+        // }
 
         printMatrix(&matrix1[0][0], size);
         printMatrix(&matrix2[0][0], size);
@@ -182,7 +182,7 @@ int main(int argc, char const *argv[])
     // MPI_Scatter(matrix1, size, MPI_INT, vet_matrix1_line, size,
     //             MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
     int line = 0;
-    MPI_Scatter(line_id, 1, MPI_INT, &line, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    // MPI_Scatter(line_id, 1, MPI_INT, &line, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
     // printf("rank: %d, line: %d\n", world_rank, line);
 
     // // Distribui cada coluna da matriz2 do processo raiz para todos os processos
