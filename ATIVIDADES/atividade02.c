@@ -168,8 +168,8 @@ int main(int argc, char const *argv[])
             line_id[i] = i;
         }
 
-        // printMatrix(&matrix1[0][0], size);
-        // printMatrix(&matrix2[0][0], size);
+        printMatrix(&matrix1[0][0], size);
+        printMatrix(&matrix2[0][0], size);
         // printMatrix(&matrix2_t[0][0], size);
     }
 
@@ -182,12 +182,12 @@ int main(int argc, char const *argv[])
     // MPI_Scatter(matrix1, size, MPI_INT, vet_matrix1_line, size,
     //             MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
     int line = 0;
-    MPI_Scatter(line_id, 1, MPI_INT, &line, 1,
-                MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
-    printf("rank: %d, line: %d\n", world_rank, line);
+    MPI_Scatter(line_id, 1, MPI_INT, &line, 1, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    // printf("rank: %d, line: %d\n", world_rank, line);
 
     // // Distribui cada coluna da matriz2 do processo raiz para todos os processos
-    MPI_Bcast(matrix1, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    MPI_Scatter(matrix1, size, MPI_INT, &vet_matrix1_line, size, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    // MPI_Bcast(matrix1, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
     MPI_Bcast(matrix2, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
 
     int result[size];
@@ -196,11 +196,19 @@ int main(int argc, char const *argv[])
         result[i] = 0;
         for (int j = 0; j < size; j++)
         {
-            result[i] += matrix1[line][j] * matrix2[j][line];
-            printf(" [%d] ", result[i]);
-        }
+            result[i] += vet_matrix1_line[j] * matrix2[j][i];
+            printf("%d resultado[%d] = %d * %d = %d\n", world_rank, i, vet_matrix1_line[j], matrix2[j][line], result[i]);
+            // printf(" resultado[%d] = vetM1[%d] * M2[%d][%d] = %d\n", i, j, j, line, result[i]);
+        }    
+        //calculo do segundo valor do vetor com erro          
         printf("\n");
     }
+
+    // for (int i = 0; i < size; i++)
+    // {
+    //     printf("vet_resul[%d] = %d\n", i, result[i]);
+    // }
+    
 
     // Desalocando memória
     // if (world_rank == MASTER_RANK)
