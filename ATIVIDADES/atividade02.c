@@ -15,6 +15,12 @@
 
 #define MASTER_RANK 0
 
+/**
+ * Gera valores aleatórios para uma matriz
+ * 
+ * @param matrix Matriz a receber os valores
+ * @param size tamanho da matriz
+*/
 void generateMatrix(int *matrix, int size)
 {
     for (int i = 0; i < size; i++)
@@ -36,7 +42,7 @@ void printMatrix(int *matrix, int size)
     for (int i = 0; i < (size * size); i++)
     {
         printf("[");
-        printf(" %d ", *matrix);
+        printf("\t%d\t", *matrix);
         printf("]");
         count++;
         matrix++;
@@ -93,6 +99,7 @@ int main(int argc, char const *argv[])
     // // Distribui cada coluna da matriz2 do processo raiz para todos os processos
     MPI_Bcast(matrix2, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
 
+    // Realiza o calculo da multiplicação de cada linha da matriz
     int result[size];
     for (int i = 0; i < size; i++)
     {
