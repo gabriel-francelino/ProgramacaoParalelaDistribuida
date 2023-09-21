@@ -78,6 +78,12 @@ int main(int argc, char const *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
+    if (world_size != size)
+    {
+        fprintf(stderr, "O número de processos deve ser igual ao tamanho da matriz!\n");
+        exit(1);
+    }
+
     // Cria as matrizers de números aleatórios no processo raiz (rank 0)
     int matrix1[size][size];
     int matrix2[size][size];
