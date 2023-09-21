@@ -86,7 +86,9 @@ int main(int argc, char const *argv[])
         generateMatrix(&matrix1[0][0], size_matrix);
         generateMatrix(&matrix2[0][0], size_matrix);
 
+        puts("Matriz 1:");
         printMatrix(&matrix1[0][0], size);
+        puts("Matriz 2:");
         printMatrix(&matrix2[0][0], size);
     }
 
@@ -117,6 +119,7 @@ int main(int argc, char const *argv[])
     // Processo master imprime a matriz resultante
     if (world_rank == MASTER_RANK)
     {
+        puts("Matriz Resultante:");
         printMatrix(&matrix_result[0][0], size);
     }
 
