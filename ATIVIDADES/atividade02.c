@@ -209,15 +209,15 @@ int main(int argc, char const *argv[])
     // }
 
     int matrix_result[size][size];
-    MPI_Gather(&result, size, MPI_INT, matrix_result, size_matrix, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
+    // Sincronização para garantir que todos os processos cheguem a este ponto
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Gather(&result, size, MPI_INT, matrix_result, size, MPI_INT, MASTER_RANK, MPI_COMM_WORLD);
 
     if (world_rank == MASTER_RANK)
     {
         printMatrix(&matrix_result[0][0], size);
     }
 
-    // Sincronização para garantir que todos os processos cheguem a este ponto
-    MPI_Barrier(MPI_COMM_WORLD);
     // Finaliza MPI
     MPI_Finalize();
 
